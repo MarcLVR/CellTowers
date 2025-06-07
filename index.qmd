@@ -1,0 +1,60 @@
+---
+title: "Nile Tower Coverage Analysis"
+format: html
+editor: visual
+---
+
+```{r}
+# 📚 Cargar librerías necesarias
+library(leaflet)
+library(readxl)
+library(openxlsx)
+library(sf)
+library(ggplot2)
+library(dplyr)
+library(units)
+library(giscoR)
+library(scales)
+library(plotly)
+
+# 📥 Cargar y preparar datos
+df2 <- read.csv("C:/Users/marc/Desktop/UOC/DataViz/P2/Africa towers.csv")
+df_egypt <- df2[df2$Country == "Egypt", ]
+df_egypt <- df_egypt[df_egypt$LON >= 30.6 & df_egypt$LON <= 33.2, ]
+df_egypt <- df_egypt[, !(names(df_egypt) %in% c("created", "updated", "averageSignal", "Continent"))]
+
+# 📈 Cargar gráficos desde archivo externo
+source("plots.R")
+```
+
+------------------------------------------------------------------------
+
+## 📊 Torres por rango
+
+```{r}
+plot_rango
+```
+
+------------------------------------------------------------------------
+
+## 📶 Porcentaje por tipo de radio
+
+```{r}
+plot_radio
+```
+
+------------------------------------------------------------------------
+
+## 🏢 Top 10 CIDs
+
+```{r}
+plot_cid
+```
+
+------------------------------------------------------------------------
+
+## 🛰️ Porcentaje por operador de red
+
+```{r}
+plot_network
+```

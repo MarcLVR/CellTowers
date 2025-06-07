@@ -1,0 +1,22 @@
+project:
+  type: website
+  output-dir: docs  # 🟢 REQUIRED for GitHub Pages
+
+website:
+  title: "nile-towers"
+  navbar:
+    left:
+      - href: index.qmd
+        text: Home
+      - href: about.qmd
+        text: About
+
+format:
+  html:
+    theme:
+      - cosmo
+      - brand
+    css: styles.css
+    toc: true
+
+editor: visual
