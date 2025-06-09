@@ -6,7 +6,7 @@ execute:
   echo: false
 ---
 
-```{r}
+```{r, include=FALSE}
 # Cargar librerías necesarias
 library(leaflet)
 library(readxl)
@@ -77,31 +77,31 @@ plot_network
 
 Each map below shows the towers deployed by a specific operator. The circles represent each tower's coverage radius, allowing a visual comparison of network reach across regions.
 
--   [Cell Towers Etisalat](tower_map_etisalat)
+-   [Cell Towers Etisalat](tower_map_Etisalat.html)
 
--   [Cell Towers Vodafone](tower_map_Vodafone)
+-   [Cell Towers Vodafone](tower_map_Vodafone.html)
 
--   [Cell Towers Orange](tower_map_Orange)
+-   [Cell Towers Orange](tower_map_Orange.html)
 
--   [Cell Towers WE](tower_map_WE)
+-   [Cell Towers WE](tower_map_WE.html)
 
 ## Interactive Maps by Radio Type
 
 These maps classify towers by radio transmission type. Larger circles indicate towers with ranges exceeding 5 km. Each layer gives a detailed view of coverage by technology.
 
--   [GSM Coverage Map](map_radio_GSM)
+-   [GSM Coverage Map](map_radio_GSM.html)
 
--   [LTE Coverage Map](map_radio_LTE)
+-   [LTE Coverage Map](map_radio_LTE.html)
 
--   [NR Coverage Map](map_radio_NR)
+-   [NR Coverage Map](map_radio_NR.html)
 
--   [UMTS Coverage Map](map_radio_UMTS)
+-   [UMTS Coverage Map](map_radio_UMTS.html)
 
 ## Uncovered Areas
 
 The following maps highlight the areas within 10 km of the Nile River that are not covered by any tower, segmented by radio technology:
 
--   [General Map Coverage](map_coverage)
+-   [General Map Coverage](map_coverage.html)
 
 ## Conclusion
 
