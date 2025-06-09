@@ -77,11 +77,6 @@ plot_network
 
 Each map below shows the towers deployed by a specific operator. The circles represent each tower's coverage radius, allowing a visual comparison of network reach across regions.
 
-```{r}
-htmltools::includeHTML("tower_map_Etisalat.html")
-htmltools::includeHTML("tower_map_Vodafone.html")
-```
-
 -   [Cell Towers Etisalat](tower_map_Etisalat.html)
 
 -   [Cell Towers Vodafone](tower_map_Vodafone.html)
