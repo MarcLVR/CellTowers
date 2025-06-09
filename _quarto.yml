@@ -4,13 +4,16 @@ project:
 
 website:
   title: "nile-towers"
+  page-navigation: true
+  site-url: https://marclvr.github.io/CellTowers/
+  
   navbar:
     left:
       - text: Home
         file: index.qmd
       - text: About
         file: about.qmd
-        
+
 format:
   html:
     theme:
