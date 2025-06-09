@@ -2,10 +2,12 @@
 title: "Nile Tower Coverage Analysis"
 format: html
 editor: visual
+execute:
+  echo: false
 ---
 
 ```{r}
-# 📚 Cargar librerías necesarias
+# Cargar librerías necesarias
 library(leaflet)
 library(readxl)
 library(openxlsx)
@@ -17,19 +19,25 @@ library(giscoR)
 library(scales)
 library(plotly)
 
-# 📥 Cargar y preparar datos
+# Cargar y preparar datos
 df2 <- read.csv("C:/Users/marc/Desktop/UOC/DataViz/P2/Africa towers.csv")
 df_egypt <- df2[df2$Country == "Egypt", ]
 df_egypt <- df_egypt[df_egypt$LON >= 30.6 & df_egypt$LON <= 33.2, ]
 df_egypt <- df_egypt[, !(names(df_egypt) %in% c("created", "updated", "averageSignal", "Continent"))]
 
-# 📈 Cargar gráficos desde archivo externo
+# Cargar gráficos desde archivo externo
 source("plots.R")
 ```
 
 ------------------------------------------------------------------------
 
-## 📊 Torres por rango
+## Introduction
+
+This report analyzes the cellular tower coverage along the Nile River in Egypt using geospatial data. Interactive visualizations have been created to explore tower range, radio technology, network providers, and spatial distribution. The result is an intuitive dashboard that helps evaluate actual network coverage around the Nile corridor. The part of interest of the route goes from Cairo to Aswan.
+
+## Towers by Coverage Range
+
+This bar chart shows the number of towers grouped by their approximate coverage range (in meters).
 
 ```{r}
 plot_rango
@@ -37,7 +45,9 @@ plot_rango
 
 ------------------------------------------------------------------------
 
-## 📶 Porcentaje por tipo de radio
+## Percentage of Towers by Radio Technology
+
+This visualization displays the proportion of towers by radio technology (e.g., GSM, LTE, UMTS).
 
 ```{r}
 plot_radio
@@ -45,7 +55,9 @@ plot_radio
 
 ------------------------------------------------------------------------
 
-## 🏢 Top 10 CIDs
+## Top 10 CIDs with Most Towers
+
+Each CID represents a Base Transceiver Station (BTS) or sector. This chart highlights the top 10 CIDs with the most tower entries, which may indicate densely populated or technically redundant areas.
 
 ```{r}
 plot_cid
@@ -53,8 +65,44 @@ plot_cid
 
 ------------------------------------------------------------------------
 
-## 🛰️ Porcentaje por operador de red
+## Percentage of Towers by Network Operator
+
+This chart shows the distribution of towers by network operator (e.g., Vodafone, Etisalat, Orange).
 
 ```{r}
 plot_network
 ```
+
+## Interactive Maps by Network
+
+Each map below shows the towers deployed by a specific operator. The circles represent each tower's coverage radius, allowing a visual comparison of network reach across regions.
+
+-   [Cell Towers Etisalat](tower_map_etisalat)
+
+-   [Cell Towers Vodafone](tower_map_Vodafone)
+
+-   [Cell Towers Orange](tower_map_Orange)
+
+-   [Cell Towers WE](tower_map_WE)
+
+## Interactive Maps by Radio Type
+
+These maps classify towers by radio transmission type. Larger circles indicate towers with ranges exceeding 5 km. Each layer gives a detailed view of coverage by technology.
+
+-   [GSM Coverage Map](map_radio_GSM)
+
+-   [LTE Coverage Map](map_radio_LTE)
+
+-   [NR Coverage Map](map_radio_NR)
+
+-   [UMTS Coverage Map](map_radio_UMTS)
+
+## Uncovered Areas
+
+The following maps highlight the areas within 10 km of the Nile River that are not covered by any tower, segmented by radio technology:
+
+-   [General Map Coverage](map_coverage)
+
+## Conclusion
+
+This visual analysis provides insight into the spatial distribution and technological composition of telecom infrastructure all along the Nile river in Egypt, going from Cairo to Aswan.

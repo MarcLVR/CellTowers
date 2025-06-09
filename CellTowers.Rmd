@@ -1,7 +1,7 @@
 ---
 title: "CellTowers"
 author: "marc"
-date: "2025-06-07"
+date: "2025-06-08"
 output: html_document
 ---
 
@@ -17,20 +17,16 @@ knitr::opts_chunk$set(echo = TRUE)
 #install.packages("dplyr")
 #install.packages("ggplot2")
 #install.packages("giscoR")
-#install.packages("scales")  # solo la primera vez
+#install.packages("scales")  
 #install.packages("quarto")
 ```
 
 ```{r}
-library(leaflet)
-library(readxl)
-library(openxlsx)
-library(sf)
-library(ggplot2)
-library(dplyr)
-library(units)
-library(giscoR)
-library(scales)
+library(leaflet);library(sf)
+library(ggplot2);library(dplyr)
+library(units);library(htmlwidgets)
+library(giscoR);library(rnaturalearthdata)
+library(scales);library(rnaturalearth)
 library(plotly);library(quarto)
 ```
 
@@ -42,31 +38,322 @@ This is an R Markdown document. Markdown is a simple formatting syntax for autho
 When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 
 ```{r}
-
-df <- read.csv("C:/Users/marc/Desktop/UOC/DataViz/P2/602.csv", header = FALSE)
-```
-
-```{r}
 df2 <- read.csv("C:/Users/marc/Desktop/UOC/DataViz/P2/Africa towers.csv")
 #rm(df2)
 ```
 
 
 ```{r}
-
 df_egypt <- df2[df2$Country == "Egypt", ]
 
+```
+
+```{r}
+df_egypt <- df_egypt[df_egypt$LON >= 30 & df_egypt$LON <= 33.2, ]
+df_egypt <- df_egypt[, !(names(df_egypt) %in% c("created", "updated", "averageSignal", "Continent", "changeable"))]
+```
+
+```{r}
+# Load river data from Natural Earth
+rivers <- ne_download(scale = 10,
+                      type = "rivers_lake_centerlines",
+                      category = "physical",
+                      returnclass = "sf")
+
+```
+
+
+```{r}
+# Filter all segments related to the Nile system
+nile_parts <- rivers %>%
+  filter(name %in% c(
+    "Nile"
+  ))
+
+# Combine into a single multiline geometry
+nile <- st_union(nile_parts)
+
+# Convert towers to sf points (keeping original LAT and LON)
+towers_sf <- st_as_sf(df_egypt, coords = c("LON", "LAT"), crs = 4326, remove = FALSE)
+
+# Reproject both geometries to metric CRS for distance computation
+towers_proj <- st_transform(towers_sf, 3857)
+nile_proj <- st_transform(nile, 3857)
+
+# Filter towers within 10 km of the Nile
+nearby_index <- st_is_within_distance(towers_proj, nile_proj, dist = 10000)
+towers_near_nile <- towers_proj[lengths(nearby_index) > 0, ]
+
+# Drop geometry but keep original columns
+towers_near_nile_df <- st_drop_geometry(towers_near_nile)
+```
+
+
+```{r}
+leaflet(data = towers_near_nile_df) %>%
+  addTiles() %>%
+  addCircleMarkers(
+    lng = ~LON,
+    lat = ~LAT,
+    radius = ~5,
+    color = "blue",
+    stroke = FALSE,
+    fillOpacity = 0.3,
+    popup = ~paste("Radio:", radio,
+                   "<br>Operador (mcc):", MCC,
+                   "<br>Net:", Network,
+                   "<br>Rango (m):", RANGE)
+  ) %>%
+  setView(lng = 31, lat = 26.5, zoom = 6) 
+```
+
+
+```{r}
+leaflet(data = towers_near_nile_df) %>%
+  addTiles() %>%
+
+  # Add subtle range coverage circles
+  addCircles(
+    lng = ~LON,
+    lat = ~LAT,
+    radius = ~RANGE,
+    color = "#FFA500",       # lighter orange
+    stroke = FALSE,          # remove border
+    fillOpacity = 0.05       # very transparent
+  ) %>%
+
+  # Add sharp tower markers
+  addCircleMarkers(
+    lng = ~LON,
+    lat = ~LAT,
+    radius = 5,
+    color = "black",
+    fillColor = "cyan",
+    stroke = TRUE,
+    weight = 0.8,
+    fillOpacity = 0.9,
+    popup = ~paste("Radio:", radio,
+                   "<br>Operador (mcc):", MCC,
+                   "<br>Net:", Network,
+                   "<br>Rango (m):", RANGE)
+  ) %>%
+
+  setView(lng = 31, lat = 26.5, zoom = 8)
+
 
 ```
 
 ```{r}
-df_egypt <- df_egypt[df_egypt$LON >= 30.6 & df_egypt$LON <= 33.2, ]
-df_egypt <- df_egypt[, !(names(df_egypt) %in% c("created", "updated", "averageSignal", "Continent"))]
+
+nile_proj <- st_transform(nile, 3857)
+nile_buffer_10km <- st_buffer(nile_proj, dist = 10000)
+
+networks <- unique(towers_near_nile_df$Network)
+
+for (net in networks) {
+  # Filter by network
+  net_data <- towers_near_nile_df %>% filter(Network == net)
+
+  # 2. Convert to sf
+  towers_sf <- st_as_sf(net_data, coords = c("LON", "LAT"), crs = 4326, remove = FALSE)
+  towers_proj <- st_transform(towers_sf, 3857)
+
+  # 3. Create coverage buffer
+  coverage_buffers <- st_buffer(towers_proj, dist = towers_proj$RANGE)
+  covered_area <- st_union(coverage_buffers)
+
+  # 4. Calculate none coverage zone within 10 km from the Nile
+  uncovered_area <- st_difference(nile_buffer_10km, covered_area)
+
+  # 5. Create map
+  map <- leaflet(data = towers_sf) %>%
+    addTiles() %>%
+
+    # None covered zones
+    addPolygons(data = st_transform(uncovered_area, 4326),
+                color = "red",
+                weight = 1,
+                fillOpacity = 0.3,
+                label = "Zona no cubierta") %>%
+    addCircles(
+      lng = ~LON,
+      lat = ~LAT,
+      radius = ~RANGE,
+      color = "orange",
+      stroke = TRUE,
+      weight = 0.5,
+      opacity = 0.5,
+      fillOpacity = 0.1
+    ) %>%
+
+    # Tower markers
+    addCircleMarkers(
+      lng = ~LON,
+      lat = ~LAT,
+      radius = 6,
+      color = "black",
+      fillColor = "blue",
+      stroke = TRUE,
+      weight = 1,
+      fillOpacity = 0.8,
+      popup = ~paste("Radio:", radio,
+                     "<br>Operador (mcc):", MCC,
+                     "<br>Net:", Network,
+                     "<br>Rango (m):", RANGE)
+    ) %>%
+
+    # Name of network
+    addControl(
+      html = paste0("<div style='font-weight:bold;font-size:16px;'>", net, "</div>"),
+      position = "bottomleft"
+    ) %>%
+
+    setView(lng = 31, lat = 26.5, zoom = 6)
+
+  print(map)
+
+  saveWidget(map, file = paste0("tower_map_", net, ".html"))
+}
+
 ```
 
 ```{r}
-# Paso 1: Agrupar en intervalos
-plot_rango <- df_egypt %>%
+nile_proj <- st_transform(nile, 3857)
+nile_buffer <- st_union(st_buffer(nile_proj, dist = 10000))
+nile_buffer_area <- st_area(nile_buffer)
+
+# Unique networks
+networks <- unique(towers_near_nile_df$Network)
+
+coverage_summary <- data.frame(
+  Network = character(),
+  AreaCovered_km2 = numeric(),
+  TotalArea_km2 = numeric(),
+  CoveragePercent = numeric(),
+  stringsAsFactors = FALSE
+)
+
+for (net in networks) {
+  net_data <- towers_near_nile_df %>% filter(Network == net)
+
+  if (nrow(net_data) == 0) next
+
+  # Convert sf
+  net_coverage <- st_as_sf(net_data, coords = c("LON", "LAT"), crs = 4326) %>%
+    st_transform(3857) %>%
+    st_buffer(dist = .$RANGE) %>%
+    st_union()
+
+  # Intersect with the buffer of nile
+  intersected_area <- st_intersection(nile_buffer, net_coverage)
+  area_covered <- st_area(intersected_area)
+
+  # save
+  coverage_summary <- rbind(coverage_summary, data.frame(
+    Network = net,
+    AreaCovered_km2 = as.numeric(area_covered) / 1e6,
+    TotalArea_km2   = as.numeric(nile_buffer_area) / 1e6,
+    CoveragePercent = as.numeric(area_covered / nile_buffer_area) * 100
+  ))
+}
+
+coverage_summary_clean <- coverage_summary %>%
+  filter(Network %in% c("Etisalat", "Vodafone", "Orange", "WE")) %>%
+  arrange(desc(CoveragePercent)) %>%
+  mutate(
+    AreaCovered_km2 = round(AreaCovered_km2, 2),
+    TotalArea_km2   = round(TotalArea_km2, 2),
+    CoveragePercent = round(CoveragePercent, 2)
+  )
+
+print(coverage_summary_clean)
+
+
+```
+
+
+```{r}
+nile_proj <- st_transform(nile, 3857)
+nile_buffer_10km <- st_buffer(nile_proj, dist = 10000)
+
+radio_types <- unique(towers_near_nile_df$radio)
+
+for (r in radio_types) {
+  radio_data <- towers_near_nile_df %>%
+    filter(radio == r)
+
+  if (nrow(radio_data) == 0) next
+
+
+  towers_sf <- st_as_sf(radio_data, coords = c("LON", "LAT"), crs = 4326, remove = FALSE)
+  towers_proj <- st_transform(towers_sf, 3857)
+
+
+  coverage_buffers <- st_buffer(towers_proj, dist = towers_proj$RANGE)
+
+  covered_area <- st_union(coverage_buffers)
+
+
+  uncovered_area <- st_difference(nile_buffer_10km, covered_area)
+
+  towers_sf$marker_color <- ifelse(towers_sf$RANGE > 5000, "red", "darkgreen")
+
+  map <- leaflet(data = towers_sf) %>%
+    addTiles() %>%
+
+    # Zonas no cubiertas en rojo
+    addPolygons(data = st_transform(uncovered_area, 4326),
+                color = "red", weight = 1, fillOpacity = 0.3,
+                label = "Zona no cubierta") %>%
+
+    # Círculos de cobertura
+    addCircles(
+      lng = ~LON,
+      lat = ~LAT,
+      radius = ~RANGE,
+      color = "orange",
+      stroke = TRUE,
+      weight = 2,
+      opacity = 0.8,
+      fillOpacity = 0.2
+    ) %>%
+
+    # Marcadores por torre
+    addCircleMarkers(
+      lng = ~LON,
+      lat = ~LAT,
+      radius = 6,
+      color = "black",
+      fillColor = ~marker_color,
+      stroke = TRUE,
+      weight = 1,
+      fillOpacity = 0.8,
+      popup = ~paste("Radio:", radio,
+                     "<br>Operador (mcc):", MCC,
+                     "<br>Net:", Network,
+                     "<br>Rango (m):", RANGE)
+    ) %>%
+
+    # Nombre del tipo de radio
+    addControl(
+      html = paste0("<div style='font-weight:bold;font-size:16px;'>", r, "</div>"),
+      position = "bottomleft"
+    ) %>%
+
+    setView(lng = 31, lat = 26.5, zoom = 6)
+
+  print(map)
+
+  saveWidget(map, file = paste0("map_radio_", r, ".html"))
+}
+
+
+```
+
+
+```{r}
+
+plot_rango <- towers_near_nile_df %>%
   mutate(RangeGroup = cut(RANGE,
                           breaks = c(0, 500, 1000, 2000, 5000, 10000, Inf),
                           labels = c("0–500", "501–1000", "1001–2000", "2001–5000", "5001–10000", "10001+"),
@@ -74,19 +361,19 @@ plot_rango <- df_egypt %>%
   count(RangeGroup) %>%
   ggplot(aes(x = RangeGroup, y = n, text = paste("Número de torres:", n))) +
   geom_bar(stat = "identity", fill = "steelblue") +
-  labs(title = "Número de torres por rango de cobertura",
-       x = "Rango de cobertura (m)",
-       y = "Número de torres") +
+  labs(title = "Number of towers by range of coverage",
+       x = "Covergae Range (m)",
+       y = "Number of Towers") +
   theme_minimal()
 
-# Convertir a gráfico interactivo
+
 ggplotly(plot_rango, tooltip = "text")
 ```
 
 
 ```{r}
 # Crear gráfico con ggplot2
-plot_radio <- df_egypt %>%
+plot_radio <- towers_near_nile_df %>%
   count(radio) %>%
   mutate(percentage = n / sum(n)) %>%
   ggplot(aes(x = reorder(radio, -percentage),
@@ -96,39 +383,48 @@ plot_radio <- df_egypt %>%
                            "<br>Porcentaje: ", percent(percentage, accuracy = 0.1)))) +
   geom_bar(stat = "identity", fill = "darkgreen") +
   scale_y_continuous(labels = percent_format()) +
-  labs(title = "Porcentaje de torres por tipo de radio",
-       x = "Tipo de radio",
-       y = "Porcentaje") +
+  labs(title = "Percentage of towers by radio type",
+       x = "Radio Type",
+       y = "Percentage") +
   theme_minimal()
 
-# Convertir a gráfico interactivo
 ggplotly(plot_radio, tooltip = "text")
 ```
 
 
 ```{r}
-plot_cid <- df_egypt %>%
+
+plot_cid <- towers_near_nile_df %>%
+  filter(CID != 0) %>%                           
   count(CID) %>%
-  top_n(10, n) %>%
+  arrange(desc(n)) %>%
+  slice_max(n, n = 10) %>%
   mutate(percentage = n / sum(n)) %>%
   ggplot(aes(x = reorder(as.factor(CID), -percentage),
              y = percentage,
              text = paste0("CID: ", CID,
                            "<br>Número de torres: ", n,
                            "<br>Porcentaje: ", percent(percentage, accuracy = 0.1)))) +
-  geom_bar(stat = "identity", fill = "purple") +
-  scale_y_continuous(labels = percent_format()) +
-  labs(title = "Top 10 CIDs con más torres",
-       x = "CID",
-       y = "Porcentaje") +
-  theme_minimal()
+  geom_bar(stat = "identity", fill = "#8E44AD", width = 0.6) +   
+  geom_text(aes(label = paste0(round(percentage * 100, 1), "%")),
+            vjust = -0.5, size = 3.5, color = "black") +         # porcentaje arriba
+  scale_y_continuous(labels = percent_format(accuracy = 1),
+                     expand = expansion(mult = c(0, 0.1))) +
+  labs(title = "Top 10 CIDs with more towers",
+       x = "CID (Cell Identifier)",
+       y = "Tower percentage") +
+  theme_minimal(base_size = 13) +
+  theme(
+    plot.title = element_text(face = "bold", size = 15, hjust = 0.5),
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
 
 ggplotly(plot_cid, tooltip = "text")
 ```
 
 
 ```{r}
-plot_network <- df_egypt %>%
+plot_network <- towers_near_nile_df %>%
   count(Network) %>%
   mutate(percentage = n / sum(n)) %>%
   ggplot(aes(x = reorder(Network, -percentage),
@@ -139,11 +435,61 @@ plot_network <- df_egypt %>%
                            "<br>Porcentaje: ", percent(percentage, accuracy = 0.1)))) +
   geom_bar(stat = "identity") +
   scale_y_continuous(labels = percent_format()) +
-  labs(title = "Porcentaje de torres por operador de red",
-       x = "Operador",
-       y = "Porcentaje") +
+  labs(title = "Percentage of towers by network operator",
+       x = "Network operator",
+       y = "Percenatge") +
   theme_minimal() +
-  theme(legend.position = "none")  # Oculta leyenda redundante
+  theme(legend.position = "none") 
 
 ggplotly(plot_network, tooltip = "text")
 ```
+
+```{r}
+towers_sf <- st_as_sf(towers_near_nile_df, coords = c("LON", "LAT"), crs = 4326, remove = FALSE)
+towers_proj <- st_transform(towers_sf, 3857)
+
+coverage_buffers <- st_buffer(towers_proj, dist = towers_proj$RANGE)
+covered_area <- st_union(coverage_buffers)
+
+nile_proj <- st_transform(nile, 3857)
+
+nile_buffer_10km <- st_buffer(nile_proj, dist = 10000)
+
+
+uncovered_area <- st_difference(nile_buffer_10km, covered_area)
+
+
+map_coverage <- leaflet() %>%
+  addTiles() %>%
+
+  addPolygons(data = st_transform(uncovered_area, 4326),
+              color = "red",
+              weight = 1,
+              fillOpacity = 0.3,
+              label = "Non Covered Zone") %>%
+
+  addCircles(data = towers_sf,
+             radius = ~RANGE,
+             color = "green",
+             weight = 1,
+             fillOpacity = 0.1) %>%
+
+  addCircleMarkers(data = towers_sf,
+                   radius = 4,
+                   color = "darkblue",
+                   fillColor = "blue",
+                   fillOpacity = 1,
+                   popup = ~paste("CID:", CID,
+                                  "<br>Radio:", radio,
+                                  "<br>Net:", Network,
+                                  "<br>Rango:", RANGE)) %>%
+
+
+  setView(lng = 31, lat = 26.5, zoom = 6)
+
+saveWidget(map_coverage, file = "docs/map_coverage.html", selfcontained = TRUE)
+
+```
+
+
+
