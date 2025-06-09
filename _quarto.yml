@@ -6,11 +6,11 @@ website:
   title: "nile-towers"
   navbar:
     left:
-      - href: index.qmd
-        text: Home
-      - href: about.qmd
-        text: About
-
+      - text: Home
+        file: index.qmd
+      - text: About
+        file: about.qmd
+        
 format:
   html:
     theme:
