@@ -496,4 +496,72 @@ saveWidget(map_coverage, file = "docs/map_coverage.html", selfcontained = TRUE)
 ```
 
 
+```{r}
+library(leaflet)
+library(dplyr)
+
+# Define consistent colors
+network_colors <- c(
+  "Vodafone" = "#0073C2",
+  "Etisalat" = "#1E8449",
+  "Orange"   = "#E67E22",
+  "WE"       = "#9B59B6"
+)
+
+# Filter networks of interest
+networks <- names(network_colors)
+towers_filtered <- towers_near_nile_df %>%
+  filter(Network %in% networks)
+
+# Initialize map
+map <- leaflet() %>%
+  addTiles()
+
+# Add network layers
+for (net in networks) {
+  net_data <- towers_filtered %>% filter(Network == net)
+  
+  map <- map %>%
+    addCircles(
+      data = net_data,
+      lng = ~LON,
+      lat = ~LAT,
+      radius = ~RANGE,
+      color = network_colors[net],
+      fillOpacity = 0.15,
+      stroke = TRUE,
+      weight = 1,
+      group = net
+    ) %>%
+    addCircleMarkers(
+      data = net_data,
+      lng = ~LON,
+      lat = ~LAT,
+      radius = 5,
+      fillColor = network_colors[net],
+      color = "blue",
+      weight = 0.5,
+      fillOpacity = 0.9,
+      popup = ~paste0(
+        "<b>Network:</b> ", Network,
+        "<br><b>Radio:</b> ", radio,
+        "<br><b>CID:</b> ", CID,
+        "<br><b>Range:</b> ", RANGE, " m"
+      ),
+      group = net
+    )
+}
+
+# Add interactive toggle for networks
+map <- map %>%
+  addLayersControl(
+    overlayGroups = networks,
+    options = layersControlOptions(collapsed = FALSE)
+  ) %>%
+  setView(lng = 31, lat = 26.5, zoom = 6)
+
+map
+
+
+```
 

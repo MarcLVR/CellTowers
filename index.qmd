@@ -93,8 +93,6 @@ These maps classify towers by radio transmission type. Larger circles indicate t
 
 -   [LTE Coverage Map](map_radio_LTE.html)
 
--   [NR Coverage Map](map_radio_NR.html)
-
 -   [UMTS Coverage Map](map_radio_UMTS.html)
 
 ## Uncovered Areas
