@@ -373,22 +373,26 @@ ggplotly(plot_rango, tooltip = "text")
 
 ```{r}
 # Crear gráfico con ggplot2
-plot_radio <- towers_near_nile_df %>%
-  count(radio) %>%
+plot_cid <- towers_near_nile_df %>%
+  count(CID) %>%
+  filter(n > 0) %>%  # Elimina CIDs con 0 torres
+  top_n(10, n) %>%
   mutate(percentage = n / sum(n)) %>%
-  ggplot(aes(x = reorder(radio, -percentage),
+  ggplot(aes(x = reorder(as.factor(CID), -percentage),
              y = percentage,
-             text = paste0("Radio: ", radio,
+             text = paste0("CID: ", CID,
                            "<br>Número de torres: ", n,
                            "<br>Porcentaje: ", percent(percentage, accuracy = 0.1)))) +
-  geom_bar(stat = "identity", fill = "darkgreen") +
+  geom_bar(stat = "identity", fill = "purple") +
   scale_y_continuous(labels = percent_format()) +
-  labs(title = "Percentage of towers by radio type",
-       x = "Radio Type",
-       y = "Percentage") +
-  theme_minimal()
+  labs(title = "Top 10 CIDs con más torres",
+       x = "CID",
+       y = "Porcentaje") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rota etiquetas X
 
-ggplotly(plot_radio, tooltip = "text")
+plot_cid <- ggplotly(plot_cid, tooltip = "text")
+
 ```
 
 

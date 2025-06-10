@@ -75,9 +75,9 @@ plot_radio <- towers_near_nile_df %>%
 # Convertir a gráfico interactivo
 plot_radio <- ggplotly(plot_radio, tooltip = "text")
 
-
 plot_cid <- towers_near_nile_df %>%
   count(CID) %>%
+  filter(n > 0) %>%  # Elimina CIDs con 0 torres
   top_n(10, n) %>%
   mutate(percentage = n / sum(n)) %>%
   ggplot(aes(x = reorder(as.factor(CID), -percentage),
@@ -90,9 +90,10 @@ plot_cid <- towers_near_nile_df %>%
   labs(title = "Top 10 CIDs con más torres",
        x = "CID",
        y = "Porcentaje") +
-  theme_minimal()
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rota etiquetas X
 
-plot_cid   <- ggplotly(plot_cid, tooltip = "text")
+plot_cid <- ggplotly(plot_cid, tooltip = "text")
 
 
 plot_network <- towers_near_nile_df %>%
