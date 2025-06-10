@@ -46,9 +46,9 @@ plot_rango <- towers_near_nile_df %>%
   count(RangeGroup) %>%
   ggplot(aes(x = RangeGroup, y = n, text = paste("Número de torres:", n))) +
   geom_bar(stat = "identity", fill = "steelblue") +
-  labs(title = "Número de torres por rango de cobertura",
-       x = "Rango de cobertura (m)",
-       y = "Número de torres") +
+  labs(title = "Number of tower by range of coverage",
+       x = "Coverage range (m)",
+       y = "Number of towers") +
   theme_minimal()
 
 # Convertir a gráfico interactivo
@@ -67,9 +67,9 @@ plot_radio <- towers_near_nile_df %>%
                            "<br>Porcentaje: ", percent(percentage, accuracy = 0.1)))) +
   geom_bar(stat = "identity", fill = "darkgreen") +
   scale_y_continuous(labels = percent_format()) +
-  labs(title = "Porcentaje de torres por tipo de radio",
-       x = "Tipo de radio",
-       y = "Porcentaje") +
+  labs(title = "Percentage of tower by technology",
+       x = "Technology",
+       y = "Percentage") +
   theme_minimal()
 
 # Convertir a gráfico interactivo
@@ -87,7 +87,7 @@ plot_cid <- towers_near_nile_df %>%
                            "<br>Porcentaje: ", percent(percentage, accuracy = 0.1)))) +
   geom_bar(stat = "identity", fill = "purple") +
   scale_y_continuous(labels = percent_format()) +
-  labs(title = "Top 10 CIDs con más torres",
+  labs(title = "Top 10 CIDs with more towers",
        x = "CID",
        y = "Porcentaje") +
   theme_minimal() +
@@ -107,9 +107,9 @@ plot_network <- towers_near_nile_df %>%
                            "<br>Porcentaje: ", percent(percentage, accuracy = 0.1)))) +
   geom_bar(stat = "identity") +
   scale_y_continuous(labels = percent_format()) +
-  labs(title = "Porcentaje de torres por operador de red",
-       x = "Operador",
-       y = "Porcentaje") +
+  labs(title = "Percentage of towers by network",
+       x = "Network operator",
+       y = "Percentage") +
   theme_minimal() +
   theme(legend.position = "none")  # Oculta leyenda redundante
 
