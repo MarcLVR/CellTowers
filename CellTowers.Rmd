@@ -385,9 +385,9 @@ plot_cid <- towers_near_nile_df %>%
                            "<br>Porcentaje: ", percent(percentage, accuracy = 0.1)))) +
   geom_bar(stat = "identity", fill = "purple") +
   scale_y_continuous(labels = percent_format()) +
-  labs(title = "Top 10 CIDs con más torres",
+  labs(title = "Top 10 CIDs with more towers",
        x = "CID",
-       y = "Porcentaje") +
+       y = "Percentage") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rota etiquetas X
 

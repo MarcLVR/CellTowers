@@ -76,24 +76,31 @@ plot_radio <- towers_near_nile_df %>%
 plot_radio <- ggplotly(plot_radio, tooltip = "text")
 
 plot_cid <- towers_near_nile_df %>%
+  filter(CID != 0) %>%                           
   count(CID) %>%
-  filter(n > 0) %>%  # Elimina CIDs con 0 torres
-  top_n(10, n) %>%
+  arrange(desc(n)) %>%
+  slice_max(n, n = 10) %>%
   mutate(percentage = n / sum(n)) %>%
   ggplot(aes(x = reorder(as.factor(CID), -percentage),
              y = percentage,
              text = paste0("CID: ", CID,
                            "<br>Número de torres: ", n,
                            "<br>Porcentaje: ", percent(percentage, accuracy = 0.1)))) +
-  geom_bar(stat = "identity", fill = "purple") +
-  scale_y_continuous(labels = percent_format()) +
+  geom_bar(stat = "identity", fill = "#8E44AD", width = 0.6) +   
+  geom_text(aes(label = paste0(round(percentage * 100, 1), "%")),
+            vjust = -0.5, size = 3.5, color = "black") +         # porcentaje arriba
+  scale_y_continuous(labels = percent_format(accuracy = 1),
+                     expand = expansion(mult = c(0, 0.1))) +
   labs(title = "Top 10 CIDs with more towers",
-       x = "CID",
-       y = "Porcentaje") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rota etiquetas X
+       x = "CID (Cell Identifier)",
+       y = "Tower percentage") +
+  theme_minimal(base_size = 13) +
+  theme(
+    plot.title = element_text(face = "bold", size = 15, hjust = 0.5),
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
 
-plot_cid <- ggplotly(plot_cid, tooltip = "text")
+plot_network <- ggplotly(plot_cid, tooltip = "text")
 
 
 plot_network <- towers_near_nile_df %>%
