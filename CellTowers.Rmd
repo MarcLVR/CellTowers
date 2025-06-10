@@ -1,7 +1,7 @@
 ---
 title: "CellTowers"
 author: "marc"
-date: "2025-06-08"
+date: "2025-06-10"
 output: html_document
 ---
 
@@ -31,11 +31,6 @@ library(plotly);library(quarto)
 ```
 
 
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 
 ```{r}
 df2 <- read.csv("C:/Users/marc/Desktop/UOC/DataViz/P2/Africa towers.csv")
@@ -54,7 +49,7 @@ df_egypt <- df_egypt[, !(names(df_egypt) %in% c("created", "updated", "averageSi
 ```
 
 ```{r}
-# Load river data from Natural Earth
+# Load river data
 rivers <- ne_download(scale = 10,
                       type = "rivers_lake_centerlines",
                       category = "physical",
@@ -84,7 +79,7 @@ nile_proj <- st_transform(nile, 3857)
 nearby_index <- st_is_within_distance(towers_proj, nile_proj, dist = 10000)
 towers_near_nile <- towers_proj[lengths(nearby_index) > 0, ]
 
-# Drop geometry but keep original columns
+
 towers_near_nile_df <- st_drop_geometry(towers_near_nile)
 ```
 
@@ -117,8 +112,8 @@ leaflet(data = towers_near_nile_df) %>%
     lng = ~LON,
     lat = ~LAT,
     radius = ~RANGE,
-    color = "#FFA500",       # lighter orange
-    stroke = FALSE,          # remove border
+    color = "#FFA500",       
+    stroke = FALSE,          
     fillOpacity = 0.05       # very transparent
   ) %>%
 
@@ -301,12 +296,12 @@ for (r in radio_types) {
   map <- leaflet(data = towers_sf) %>%
     addTiles() %>%
 
-    # Zonas no cubiertas en rojo
+
     addPolygons(data = st_transform(uncovered_area, 4326),
                 color = "red", weight = 1, fillOpacity = 0.3,
                 label = "Zona no cubierta") %>%
 
-    # Círculos de cobertura
+
     addCircles(
       lng = ~LON,
       lat = ~LAT,
@@ -334,7 +329,6 @@ for (r in radio_types) {
                      "<br>Rango (m):", RANGE)
     ) %>%
 
-    # Nombre del tipo de radio
     addControl(
       html = paste0("<div style='font-weight:bold;font-size:16px;'>", r, "</div>"),
       position = "bottomleft"
@@ -372,7 +366,7 @@ ggplotly(plot_rango, tooltip = "text")
 
 
 ```{r}
-# Crear gráfico con ggplot2
+
 plot_cid <- towers_near_nile_df %>%
   count(CID) %>%
   filter(n > 0) %>%  # Elimina CIDs con 0 torres
@@ -389,7 +383,7 @@ plot_cid <- towers_near_nile_df %>%
        x = "CID",
        y = "Percentage") +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rota etiquetas X
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  
 
 plot_cid <- ggplotly(plot_cid, tooltip = "text")
 
@@ -411,7 +405,7 @@ plot_cid <- towers_near_nile_df %>%
                            "<br>Porcentaje: ", percent(percentage, accuracy = 0.1)))) +
   geom_bar(stat = "identity", fill = "#8E44AD", width = 0.6) +   
   geom_text(aes(label = paste0(round(percentage * 100, 1), "%")),
-            vjust = -0.5, size = 3.5, color = "black") +         # porcentaje arriba
+            vjust = -0.5, size = 3.5, color = "black") +         
   scale_y_continuous(labels = percent_format(accuracy = 1),
                      expand = expansion(mult = c(0, 0.1))) +
   labs(title = "Top 10 CIDs with more towers",
@@ -495,73 +489,4 @@ saveWidget(map_coverage, file = "docs/map_coverage.html", selfcontained = TRUE)
 
 ```
 
-
-```{r}
-library(leaflet)
-library(dplyr)
-
-# Define consistent colors
-network_colors <- c(
-  "Vodafone" = "#0073C2",
-  "Etisalat" = "#1E8449",
-  "Orange"   = "#E67E22",
-  "WE"       = "#9B59B6"
-)
-
-# Filter networks of interest
-networks <- names(network_colors)
-towers_filtered <- towers_near_nile_df %>%
-  filter(Network %in% networks)
-
-# Initialize map
-map <- leaflet() %>%
-  addTiles()
-
-# Add network layers
-for (net in networks) {
-  net_data <- towers_filtered %>% filter(Network == net)
-  
-  map <- map %>%
-    addCircles(
-      data = net_data,
-      lng = ~LON,
-      lat = ~LAT,
-      radius = ~RANGE,
-      color = network_colors[net],
-      fillOpacity = 0.15,
-      stroke = TRUE,
-      weight = 1,
-      group = net
-    ) %>%
-    addCircleMarkers(
-      data = net_data,
-      lng = ~LON,
-      lat = ~LAT,
-      radius = 5,
-      fillColor = network_colors[net],
-      color = "blue",
-      weight = 0.5,
-      fillOpacity = 0.9,
-      popup = ~paste0(
-        "<b>Network:</b> ", Network,
-        "<br><b>Radio:</b> ", radio,
-        "<br><b>CID:</b> ", CID,
-        "<br><b>Range:</b> ", RANGE, " m"
-      ),
-      group = net
-    )
-}
-
-# Add interactive toggle for networks
-map <- map %>%
-  addLayersControl(
-    overlayGroups = networks,
-    options = layersControlOptions(collapsed = FALSE)
-  ) %>%
-  setView(lng = 31, lat = 26.5, zoom = 6)
-
-map
-
-
-```
 
