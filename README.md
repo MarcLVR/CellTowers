@@ -48,8 +48,6 @@ The interactive view lets you zoom into specific cities, toggle layers, and clic
 
 ## What the maps surface
 
-> _[Replace the placeholders below with your actual observations once you've reviewed the rendered maps. Even rough bullets are worth more than nothing — recruiters skim, and a "Findings" section is where they decide whether the project is real analysis or a tech demo.]_
-
 - **Geographic concentration.** Tower density follows the Nile Delta and the Cairo–Alexandria corridor; sparse coverage in the Western Desert and southern interior — likely a mix of real infrastructure thinness and OpenCellID's urban bias.
 - **Operator footprint.** _[Which operator leads in tower count? Where do they overlap vs. differentiate?]_
 - **Technology mix.** _[Where does 2G GSM still dominate? Where has 4G LTE consolidated? Where, if anywhere, is 5G NR visible?]_
