@@ -17,11 +17,10 @@ This is a side project at the intersection of two things I work with day to day 
 
 ## Dataset
 
-> _[Confirm and fill in:]_ Cell tower data sourced from [OpenCellID](https://opencellid.org), the largest open database of mobile cell towers worldwide. Filtered to MCC 602 (Egypt). MNC codes mapped to operator names (Etisalat, Orange, Vodafone, WE). Radio family tagged from the dataset's `radio` field (GSM, UMTS, LTE, NR).
+> [OpenCellID](https://opencellid.org), the largest open database of mobile cell towers worldwide. Filtered to MCC 602 (Egypt). MNC codes mapped to operator names (Etisalat, Orange, Vodafone, WE). Radio family tagged from the dataset's `radio` field (GSM, UMTS, LTE, NR).
 
 OpenCellID is crowdsourced. Coverage is not uniform: urban areas (Cairo, Alexandria, Giza, the Nile Delta) are densely captured; the Western Desert and the southern interior are not. Reported tower counts in this analysis are therefore a *lower bound* on actual infrastructure, and that asymmetry shows up in every map below.
 
-> _[Fill in the snapshot date — when you exported the data from OpenCellID.]_
 
 ---
 
