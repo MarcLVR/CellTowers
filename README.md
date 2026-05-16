@@ -2,7 +2,6 @@
 
 A geospatial analysis of mobile cellular infrastructure across Egypt at the individual tower level, broken down by operator (Etisalat, Orange, Vodafone, WE) and radio family (GSM, UMTS, LTE, NR). Interactive Leaflet maps surface operator concentration, generational rollout, and the urban–rural divide on the network.
 
-> Live site: _[TBD — host on GitHub Pages or Quarto Pub and link here.]_
 
 **Author:** Marc Pérez Bernús
 
